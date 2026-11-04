@@ -1,5 +1,9 @@
 use clap::Parser;
 
+use tracing::info;
+
+mod logging;
+
 #[derive(Parser, Debug)]
 #[command(name = "gerby-cli")]
 #[command(about = "CLI for exporting PDFs of KiCad projects from a git repo URL!", long_about = None)]
@@ -18,7 +22,8 @@ struct Args {
 }
 
 fn main() {
+    logging::init();
     let args = Args::parse();
 
-    println!("{:?}", args);
+    info!("{:?}", args);
 }
