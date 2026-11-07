@@ -35,5 +35,5 @@ fn main() {
         Err(SkelletonError::Other) => output_error("skelleton_fail", vec![]),
     };
 
-    info!("{:?}", skelleton_download.get_path());
+    info!("{:?}", skelleton_download.get_files());
 }

@@ -19,18 +19,20 @@ pub enum ExtractError {
 pub enum RepoDownloadState {
     Empty,
     Created,
-    SkelletonDownloaded,
+    SkelletonPopulated,
 }
 
 pub struct RepoDownload {
     path: PathBuf,
     stage: RepoDownloadState,
+    files: Vec<PathBuf>,
 }
 impl RepoDownload {
     pub fn new(process_id: &str) -> Self {
         Self {
             path: std::env::temp_dir().join(format!("Gerby-core-{}", process_id,)),
             stage: RepoDownloadState::Empty,
+            files: vec![],
         }
     }
 
@@ -64,6 +66,16 @@ impl RepoDownload {
 
     pub fn set_stage(&mut self, stage: RepoDownloadState) {
         self.stage = stage;
+    }
+
+    pub fn add_files_from_path_strs(&mut self, files: Vec<&str>) {
+        for file in files {
+            self.files.push(PathBuf::from(file));
+        }
+    }
+
+    pub fn get_files(&self) -> Vec<PathBuf> {
+        self.files.clone()
     }
 }
 impl Drop for RepoDownload {
@@ -136,32 +148,10 @@ pub fn clone_repo_skelleton(args: &Args, process_id: &str) -> Result<RepoDownloa
     }
 
     // Create files
-    let files = String::from_utf8_lossy(&output.stdout);
-    for file_path in files.lines() {
-        let path = download.get_path().join(Path::new(file_path.trim()));
+    let file_paths = String::from_utf8_lossy(&output.stdout);
+    let files: Vec<&str> = file_paths.lines().map(|a| a.trim()).collect();
 
-        // create parent dirs for file
-        if let Some(parent) = path.parent()
-            && !parent.exists()
-            && let Err(err) = fs::create_dir_all(parent)
-        {
-            error!(
-                "Failed to create parent dir for skelleton at '{:?}', due to  {}",
-                parent, err
-            );
-            return Err(SkelletonError::Other);
-        }
-
-        // create file
-        if let Err(err) = fs::File::create(&path) {
-            error!(
-                "Failed to create file for skelleton at '{:?}', due to  {}",
-                path, err
-            );
-            return Err(SkelletonError::Other);
-        }
-    }
-
-    download.set_stage(RepoDownloadState::SkelletonDownloaded);
+    download.add_files_from_path_strs(files);
+    download.set_stage(RepoDownloadState::SkelletonPopulated);
     Ok(download)
 }
