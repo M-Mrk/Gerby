@@ -1,7 +1,8 @@
 use regex::Regex;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::str::FromStr;
 use tracing::{error, info, warn};
+use wait_timeout::ChildExt;
 
 /// Checks whether URI contains invalid characters or is an IP address and prefixes https if needed
 pub fn check_valid_uri(uri: &str) -> Result<String, String> {
@@ -38,27 +39,41 @@ pub fn check_valid_uri(uri: &str) -> Result<String, String> {
 
 /// Checks whether repo exists and can be accessed using git ls-remote
 pub fn check_repo_exists(uri: &str) -> Result<(), ()> {
-    let output = match Command::new("git")
+    info!("Running git ls-remote for: {}", uri);
+    let mut child = Command::new("git")
         .arg("ls-remote")
         .arg("--")
         .arg(uri)
         .env("GIT_TERMINAL_PROMPT", "0") // fail if user input needed
-        .output()
-    {
-        Ok(out) => out,
-        Err(err) => {
-            error!("{:?}", err);
-            return Err(());
+        .stdin(Stdio::null())
+        .spawn()
+        .map_err(|err| {
+            error!("Failed to spawn git ls-remote due to: {}", err);
+        })?;
+
+    // Timeout test
+    // let mut child = Command::new("sleep").arg("1000").spawn().unwrap();
+
+    let timeout = std::time::Duration::from_secs(30);
+    match child.wait_timeout(timeout) {
+        Ok(Some(output)) => {
+            if output.success() {
+                info!("git ls-remote succeeded and returned: {:?}", child);
+                Ok(())
+            } else {
+                warn!("git ls-remote failed and returned: {:?}", child);
+                Err(())
+            }
         }
-    };
-
-    if !output.status.success() {
-        warn!("git ls-remote failed and returned: {:?}", output);
-        return Err(());
+        Ok(None) => {
+            warn!("git ls-remote timed out!");
+            Err(())
+        }
+        Err(err) => {
+            error!("Failed to wait for git ls-remote, due to: {}", err);
+            Err(())
+        }
     }
-
-    info!("git ls-remote succeeded and returned: {:?}", output);
-    Ok(())
 }
 
 #[cfg(test)]
