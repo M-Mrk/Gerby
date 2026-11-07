@@ -13,9 +13,11 @@ use crate::{
 mod logging;
 
 fn main() {
-    logging::init();
+    let process_id = uuid::Uuid::new_v4().to_string();
+    logging::init(&process_id);
     let mut args = Args::parse();
-    info!("Running with {:?}", args);
+    info!("Running with {:?} and id {}", args, process_id);
+    output_update("process_id", vec![("id", &process_id)]);
 
     args.repo_url = check_valid_uri(&args.repo_url).unwrap_or_else(|uri_err| {
         output_error("uri_invalid", vec![("uri", &uri_err)]);
@@ -27,7 +29,7 @@ fn main() {
         output_update("repo_found", vec![]);
     }
 
-    let skelleton_download = match clone_repo_skelleton(&args) {
+    let skelleton_download = match clone_repo_skelleton(&args, &process_id) {
         Ok(download) => download,
         Err(SkelletonError::Timeout) => output_error("skelleton_timeout", vec![]),
         Err(SkelletonError::Other) => output_error("skelleton_fail", vec![]),

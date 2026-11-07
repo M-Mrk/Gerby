@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{fs, path::Path};
 use tracing::{error, info, warn};
-use uuid::Uuid;
 use wait_timeout::ChildExt;
 
 use crate::args::Args;
@@ -28,9 +27,9 @@ pub struct RepoDownload {
     stage: RepoDownloadState,
 }
 impl RepoDownload {
-    pub fn new() -> Self {
+    pub fn new(process_id: &str) -> Self {
         Self {
-            path: std::env::temp_dir().join(format!("Gerby-core-{}", Uuid::new_v4(),)),
+            path: std::env::temp_dir().join(format!("Gerby-core-{}", process_id,)),
             stage: RepoDownloadState::Empty,
         }
     }
@@ -76,8 +75,8 @@ impl Drop for RepoDownload {
 
 /// Clone a skelleton of a git repo (file layout but no data). Returns RepoDownload with path to
 /// clone in a temporary directory
-pub fn clone_repo_skelleton(args: &Args) -> Result<RepoDownload, SkelletonError> {
-    let mut download = RepoDownload::new();
+pub fn clone_repo_skelleton(args: &Args, process_id: &str) -> Result<RepoDownload, SkelletonError> {
+    let mut download = RepoDownload::new(process_id);
     download.init().map_err(|_| SkelletonError::Other)?;
 
     // clone repo .git data for newest version

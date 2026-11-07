@@ -62,11 +62,11 @@ fn prune_log() {
 /// Sets up logging to a file and stderr.
 ///
 /// If the max of logs is hit, oldest logs get pruned to make space for the new one
-pub fn init() {
+pub fn init(process_id: &str) {
     // Make sure log dir exists
     fs::create_dir_all(get_log_dir()).unwrap_or_else(|err| {
         eprintln!(
-            "Exiting, failed to create {:?} dir!: {}",
+            "Exiting, failed to create logging dir at {:?}, due to: {}",
             get_log_dir().as_path(),
             err
         );
@@ -82,7 +82,7 @@ pub fn init() {
     }
 
     let execution_time = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S");
-    let log_file_name = format!("gerby_cli-{}.log", execution_time);
+    let log_file_name = format!("gerby_cli-{}-{}.log", process_id, execution_time);
 
     let log_file_path = Path::new(get_log_dir().as_path()).join(log_file_name);
     let log_file = File::create(log_file_path).unwrap_or_else(|err| {
