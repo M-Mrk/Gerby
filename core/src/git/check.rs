@@ -40,7 +40,7 @@ pub fn check_valid_uri(uri: &str) -> Result<String, String> {
 /// Checks whether repo exists and can be accessed using git ls-remote
 pub fn check_repo_exists(uri: &str) -> Result<(), ()> {
     info!("Running git ls-remote for: {}", uri);
-    let mut child = Command::new("git")
+    let mut ls_remote = Command::new("git")
         .arg("ls-remote")
         .arg("--")
         .arg(uri)
@@ -55,13 +55,13 @@ pub fn check_repo_exists(uri: &str) -> Result<(), ()> {
     // let mut child = Command::new("sleep").arg("1000").spawn().unwrap();
 
     let timeout = std::time::Duration::from_secs(30);
-    match child.wait_timeout(timeout) {
+    match ls_remote.wait_timeout(timeout) {
         Ok(Some(output)) => {
             if output.success() {
-                info!("git ls-remote succeeded and returned: {:?}", child);
+                info!("git ls-remote succeeded and returned: {:?}", ls_remote);
                 Ok(())
             } else {
-                warn!("git ls-remote failed and returned: {:?}", child);
+                warn!("git ls-remote failed and returned: {:?}", ls_remote);
                 Err(())
             }
         }

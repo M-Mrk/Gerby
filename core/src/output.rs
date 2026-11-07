@@ -24,12 +24,15 @@ fn send_message(kind: &str, id: &str, data: MessageData) {
     println!("{}", json);
 }
 
+// Output update json message
 pub fn output_update(id: &str, data: MessageData) {
     send_message("update", id, data);
 }
 
-pub fn output_error(id: &str, data: MessageData) {
+// Output error json message and exit with error
+pub fn output_error(id: &str, data: MessageData) -> ! {
     send_message("error", id, data);
+    std::process::exit(1);
 }
 
 #[cfg(test)]

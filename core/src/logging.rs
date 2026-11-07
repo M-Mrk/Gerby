@@ -3,7 +3,6 @@ use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use anyhow::Result;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 

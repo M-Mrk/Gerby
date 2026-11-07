@@ -12,10 +12,10 @@ pub struct Args {
     pub output: PathBuf,
 
     /// Flag whether schematics should be exported
-    #[arg(short, long, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     pub schematics: bool,
 
     /// Flag whether pcb should be exported
-    #[arg(short, long, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     pub pcb: bool,
 }
