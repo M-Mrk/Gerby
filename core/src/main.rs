@@ -4,9 +4,12 @@ use clap::Parser;
 
 use tracing::info;
 
-use crate::git::check_valid_uri;
-
 mod git;
+use crate::{
+    git::{check_repo_exists, check_valid_uri},
+    output::{output_error, output_update},
+};
+
 mod logging;
 mod output;
 
@@ -34,5 +37,14 @@ fn main() {
     let mut args = Args::parse();
     info!("Running with {:?}", args);
 
-    args.repo_url = check_valid_uri(&args.repo_url).unwrap_or_else(|_| std::process::exit(1));
+    args.repo_url = check_valid_uri(&args.repo_url).unwrap_or_else(|uri_err| {
+        output_error("uri_invalid", vec![("uri", &uri_err)]);
+        std::process::exit(1)
+    });
+
+    if check_repo_exists(&args.repo_url).is_err() {
+        output_error("repo_not_found", vec![("uri", &args.repo_url)]);
+    } else {
+        output_update("repo_found", vec![]);
+    }
 }
