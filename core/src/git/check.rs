@@ -81,19 +81,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_uri_check_real_repo() {
+    fn test_uri_real_repo() {
         assert!(check_valid_uri("github.com/M-Mrk/gerby").is_ok());
         assert!(check_valid_uri("gitlab.com/gitlab-org/gitlab").is_ok());
         assert!(check_valid_uri("codeberg.org/forgejo/forgejo").is_ok());
     }
 
     #[test]
-    fn test_uri_check_real_repo_w_https() {
+    fn test_uri_real_repo_w_https() {
         assert!(check_valid_uri("https://github.com/M-Mrk/gerby").is_ok());
     }
 
     #[test]
-    fn test_uri_check_malicous() {
+    fn test_uri_malicous() {
         assert!(check_valid_uri("github.com/john/project && echo 'evil'").is_err());
         assert!(check_valid_uri("file://evil-file").is_err());
         assert!(check_valid_uri("192.168.2.1").is_err());
@@ -101,7 +101,7 @@ mod tests {
     }
 
     #[test]
-    fn test_uri_check_empty() {
+    fn test_uri_empty() {
         assert!(check_valid_uri("").is_err());
     }
 

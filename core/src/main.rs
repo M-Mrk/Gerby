@@ -6,7 +6,10 @@ mod git;
 mod output;
 use crate::{
     args::Args,
-    git::{SkelletonError, check_repo_exists, check_valid_uri, clone_repo_skelleton},
+    git::{
+        ExtractError, RepoDownloadState, SkelletonError, check_repo_exists, check_valid_uri,
+        clone_repo_skelleton, extract_kicad_files,
+    },
     output::{output_error, output_update},
 };
 
@@ -35,5 +38,30 @@ fn main() {
         Err(SkelletonError::Other) => output_error("skelleton_fail", vec![]),
     };
 
-    info!("{:?}", skelleton_download.get_files());
+    let extracted_download = match extract_kicad_files(skelleton_download) {
+        Ok(download) => {
+            let path = if let RepoDownloadState::KiCadExtracted(p) = &download.stage {
+                p
+            } else {
+                panic!()
+            };
+            output_update("kicad_found", vec![("path", &(format!("{:?}", path)))]);
+            download
+        }
+        Err(ExtractError::NothingFound) => {
+            output_error("kicad_not_found", vec![]);
+        }
+        Err(ExtractError::Timeout) => {
+            output_error("kicad_timeout", vec![]);
+        }
+        Err(ExtractError::Other) => {
+            output_error("kicad_fail", vec![]);
+        }
+    };
+
+    info!("files at {:?}", extracted_download.get_path());
+
+    loop {
+        std::thread::sleep(std::time::Duration::from_hours(1));
+    }
 }
